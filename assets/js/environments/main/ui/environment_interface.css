@@ -1,0 +1,372 @@
+.ui-game{
+	position:fixed;
+	margin:auto;
+	left:0;
+	right:0;
+	text-align:center;
+}
+
+.ui-game .no-click-screen{
+	position:fixed;
+	top:0;
+	left:0;
+	width:100%;
+	height:100%;
+}
+
+.ui-game.intro-button{
+	background:rgba(48, 96, 150, 0.76);
+	z-index:12;
+	width:14vw;
+	font-size:1vw;
+	padding:0.5vw;
+	bottom:2vw;
+	color:#fff;
+	text-shadow:0.1vw 0.1vw 0.1vw rgba(0, 0, 0, 0.5);
+	box-shadow:0 0.1vw 0.5vw -0.15vw rgba(0,0,0,0.9);
+	border:0.1vw solid #7daadd;
+	border-radius:100vw;
+	cursor:pointer;
+}
+
+.ui-game.intro-button:hover{
+	background:rgba(71, 132, 199, 0.76);
+}
+
+.ui-game-begin   { right:17vw; }
+.ui-game-controls{  left:17vw; }
+
+.ui-game-title,
+.ui-game-finish{
+	display:inline-block;
+	width:0%;
+	position:fixed;
+	top:0;
+	left:0;
+	font-size:2.5vw;
+	color:rgba(255,255,255,0.95);
+	padding:0.75vw;
+	overflow:hidden;
+
+	box-shadow:0 0 0.75vw -0.15vw rgba(0,0,0,0.9);
+
+	background: rgba(19, 68, 122, 0.83);
+        background: -webkit-linear-gradient( 90deg, rgba(19, 68, 122, 0.23), rgba(19, 68, 122, 0.9) 10vw, rgba(19, 68, 122, 0.9) 90vw, rgba(19, 68, 122, 0.23) );
+        background:    -moz-linear-gradient( 90deg, rgba(19, 68, 122, 0.23), rgba(19, 68, 122, 0.9) 10vw, rgba(19, 68, 122, 0.9) 90vw, rgba(19, 68, 122, 0.23) );
+        background:      -o-linear-gradient( 90deg, rgba(19, 68, 122, 0.23), rgba(19, 68, 122, 0.9) 10vw, rgba(19, 68, 122, 0.9) 90vw, rgba(19, 68, 122, 0.23) );
+        background:         linear-gradient( 90deg, rgba(19, 68, 122, 0.23), rgba(19, 68, 122, 0.9) 10vw, rgba(19, 68, 122, 0.9) 90vw, rgba(19, 68, 122, 0.23) );
+}
+
+.ui-game-finish{
+	z-index:999;
+	display:none;
+}
+
+.ui-game-title  .caption,
+.ui-game-finish .caption{
+	opacity:0;
+	white-space:nowrap;
+	color:#DCECFE;
+	font-weight:400;
+	padding:0.25vw;
+
+	text-shadow:0.1vw 0.1vw 0.1vw rgba(0, 0, 0, 0.5);
+}
+
+.ui-game-title  hr,
+.ui-game-finish hr{
+	margin:0 auto;
+	width:30vw;
+	border-color:rgba(255,255,255,0.25);
+}
+
+.ui-game-title .caption{
+	width:55vw;
+	border-left  : 1px solid rgba(255,255,255,0.25);
+	border-right : 1px solid rgba(255,255,255,0.25);
+	margin:auto;
+}
+
+.ui-game-pause{
+	position:fixed;
+	color:#fff;
+	font-size:1vw;
+	top:1.2vw;
+	right:auto;
+	padding:0.4vw 15px;
+        text-shadow:1px 1px 0px #000;
+	z-index:12;
+	cursor:pointer;
+}
+
+.ui-game-pause:hover{
+	color:#8cd5ed;
+}
+
+.ui-game-pause i{
+	margin-top:0.045vw;
+};
+
+.ui-game-pause:hover{
+	color:#8CD5ED;
+}
+
+.ui-game-countdown{
+	width :8vw;
+	height:8vw;
+	font-size:3vw;
+	color:#fff;
+	text-shadow:0.1vw 0.1vw 0.1vw rgba(0, 0, 0, 0.5);
+	display:table;
+	background:rgba(13, 53, 96, 0.67);
+	border:0.1vw solid rgba(181, 216, 255, 0.73);
+	border-radius:100px;
+	box-shadow:0 0 0.5vw 0vw rgba(0,0,0,0.9);
+	top:4vw;
+	z-index:999;
+}
+
+.ui-game-countdown .countdown-container{
+	display:table-cell;
+	vertical-align:middle;
+}
+
+.ui-game-countdown .countdown-val{
+	opacity:0;
+}
+
+.ui-power-gauge{
+	width:35vw;
+	bottom:2.25vw;
+}
+
+.ui-power-gauge .tick-marks,
+.ui-power-gauge .sub-bars,
+.ui-power-gauge .power-bar{
+	width:calc( 100% - 35px );
+	margin:auto;
+}
+
+.ui-power-gauge .tick-marks{
+	position:relative;
+	text-align:left;
+	color:#fff;
+	height:1.4vw;
+	line-height:1.4;
+	width:100%;
+
+	text-shadow: 0.1vw  0.1vw 0.1vw #0F2A47,
+		    -0.1vw  0.1vw 0.1vw #0F2A47,
+		     0.1vw -0.1vw 0.1vw #0F2A47,
+		    -0.1vw -0.1vw 0.1vw #0F2A47,
+		     0.1vw  0     0.1vw #0F2A47,
+		    -0.1vw  0     0.1vw #0F2A47,
+		    -0.1vw  0     0.1vw #0F2A47,
+		     0      0.1vw 0.1vw #0F2A47,
+		     0     -0.1vw 0.1vw #0F2A47;
+}
+
+.ui-power-gauge .tick-marks.small{
+	height:0;
+}
+
+.ui-power-gauge .tick-marks .tick{
+	position:absolute;
+	width:2vw;
+	text-align:center;
+	transform:translateX(-50%);
+	z-index:1;
+}
+
+.ui-power-gauge .tick-marks.big .tick{
+	padding-top:2.45vw;
+}
+
+.ui-power-gauge .tick-marks .tick:after{
+	content:"";
+	background:#6088B3;
+	position:absolute;
+	left  : 0;
+	right : 0;
+	margin:auto;
+}
+
+.ui-power-gauge .tick-marks.big .tick:after{
+	width : 0.2vw;
+	height: 0.5vw;
+	top   : 0.7vw;
+	background:#2B6199;
+
+	box-shadow:-0.1vw -0.1vw 0 #39BBFF,
+		    0.1vw -0.1vw 0 #39BBFF,
+		    0.1vw  0     0 #39BBFF,
+		   -0.1vw  0     0 #39BBFF,
+		    0     -0.1vw 0 #39BBFF;
+}
+
+.ui-power-gauge .tick-marks.small .tick:after{
+	width : 0.1vw;
+	height: 0.4vw;
+	bottom:-0.4vw;
+	background:#0890DC;
+}
+
+.ui-power-gauge .power-bar-container{
+	background:rgba(19, 95, 185, 0.8);
+	padding:0.5vw;
+	border-radius:2vw;
+	border:0.12vw solid #87BFFF;
+	box-shadow:0.1vw 0.1vw 0.5vw #000;
+}
+
+.ui-power-gauge .power-bar{
+	position:relative;
+	height:1.25vw;
+	border-top   :0.1vw solid #00A8FF;
+	border-bottom:0.1vw solid #39BBFF;
+
+	background:#204977;
+        background: -webkit-linear-gradient( 0deg, #3A689C, #153A65 );
+        background:    -moz-linear-gradient( 0deg, #3A689C, #153A65 );
+        background:      -o-linear-gradient( 0deg, #3A689C, #153A65 );
+        background:         linear-gradient( 0deg, #3A689C, #153A65 );
+}
+
+.ui-power-gauge .power-bar .positive-bar{
+	position:absolute;
+	width:95%;
+	height:100%;
+	right:0;
+}
+
+.ui-power-gauge .power-bar .negative-bar{
+	position:absolute;
+	width:5%;
+	height:100%;
+	left:0;
+}
+
+.ui-power-gauge .power-bar .power-value,
+.ui-power-gauge .power-bar .curr-power{
+	position:absolute;
+	width:0%;
+	height:65%;
+	top:0;
+	left:0;
+	bottom:0;
+	margin:auto;
+
+	z-index:2;
+
+	background:#76ECFF;
+        background: -webkit-linear-gradient( 0deg, #A2F2FF, #75b8ff );
+        background:    -moz-linear-gradient( 0deg, #A2F2FF, #75b8ff );
+        background:      -o-linear-gradient( 0deg, #A2F2FF, #75b8ff );
+        background:         linear-gradient( 0deg, #A2F2FF, #75b8ff );
+}
+
+.ui-power-gauge .power-bar .negative-bar .curr-power{
+	right:0;
+	margin-right:0;
+}
+
+.ui-power-gauge .power-bar .power-value{
+	opacity:0.5;
+	z-index:1;
+}
+
+.ui-power-gauge .sub-bars{
+	position:relative;
+	height:5px;
+}
+
+.ui-power-gauge .sub-bars .accuracy-section{
+	width:10%;
+	height:5px;
+	position:absolute;
+	border:1px solid rgba(255, 255, 255, 0.25);
+
+	background:#fff;
+        background: -webkit-linear-gradient( 90deg, #AA5353, #5BFF5B, #AA5353 );
+        background:    -moz-linear-gradient( 90deg, #AA5353, #5BFF5B, #AA5353 );
+        background:      -o-linear-gradient( 90deg, #AA5353, #5BFF5B, #AA5353 );
+        background:         linear-gradient( 90deg, #AA5353, #5BFF5B, #AA5353 );
+}
+
+.ui-scoreboard{
+	right:auto;
+	top : 5px;
+	left:calc( 1vw + 35px );
+	background:rgba(19, 95, 185, 0.8);
+	color:#fff;
+	max-width:calc( 100% - 1vw - 40px );
+	padding:0 3px;
+}
+
+.ui-scoreboard *{
+	font-size:18px;
+}
+
+.ui-scoreboard table.players{
+	border-collapse:separate;
+	border-spacing:0 3px;
+}
+
+.ui-scoreboard .player > td{
+	border:1px solid rgba(9, 43, 82, 0.8);
+}
+
+.ui-scoreboard .player > td:not(:nth-child(1)){
+	border-left:0;
+}
+
+.ui-scoreboard .player .name{
+	background:rgba(0,0,0,0.2);
+	width:165px;
+	border-right:1px solid rgba(9, 43, 82, 0.8);
+}
+
+.ui-scoreboard .player.active .name{
+	-webkit-animation:scoreboard-active-player 1.5s infinite;
+	   -moz-animation:scoreboard-active-player 1.5s infinite;
+		animation:scoreboard-active-player 1.5s infinite;
+}
+
+@-webkit-keyframes scoreboard-active-player{
+	  0% { background:rgb(25,  65, 113); }
+	 50% { background:rgb(51, 144, 255); }
+	100% { background:rgb(25,  65, 113); }
+}
+
+@keyframes scoreboard-active-player{
+	  0% { background:rgb(25,  65, 113); }
+	 50% { background:rgb(51, 144, 255); }
+	100% { background:rgb(25,  65, 113); }
+}
+
+.ui-scoreboard .player .score{
+	background:rgba(224, 238, 255, 0.32);
+	width:85px;
+}
+
+.ui-scoreboard .player .time{
+	width:70px;
+}
+
+.ui-scoreboard.bowling .player .frames{
+	padding:3px;
+}
+
+.ui-scoreboard.bowling .player .frames td.frame{
+	border:1px solid rgba(0,0,0,0.3);
+	background:rgba(255, 255, 255, 0.1);
+}
+
+.ui-scoreboard.bowling .player .frames td.frame .values{
+	width:70px;
+}
+
+.ui-scoreboard.bowling .player .frames td.frame .values td{
+	padding:3px;
+	font-size:16px;
+}
