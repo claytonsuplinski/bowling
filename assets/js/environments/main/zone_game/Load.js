@@ -35,6 +35,7 @@ Object.assign( JL.webgl.load.groups, {
 			},
 		],
 		scripts : [
+			"./assets/js/environments/main/ui/finish.js",
 			"./assets/js/environments/main/ui/power_gauge.js",
 			"./assets/js/environments/main/ui/scoreboard.js",
 

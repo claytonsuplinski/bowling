@@ -3,6 +3,7 @@ JL.webgl.space_object.ball = JL.functions.inherit_class( function(){}, JL.webgl.
 		{ path : [ 'graphics_objects' ], value : {
 			get_default : function(){ return [ JL.webgl.functions.get_graphics_object( 'bowling_ball' ) ]; },
 		} },
+		{ path : [ 'independent_camera' ], value : { default : true, } },
 	],
 	_inputs : [
 		{ key : 'radius', type : 'float', default : 1 },
@@ -14,6 +15,13 @@ JL.webgl.space_object.ball.prototype._on_instantiate = function( p ){
 
 	this.player = p.parent_object;
 	this.game   = this.player.parent_object;
+
+	this.ui_elements = JL.functions.filter_duplicates( ( this.ui_elements || [] ).concat([ 'scoreboard' ]) );
+
+	if( !this.ui_info ) this.ui_info = {};
+	this.ui_info._game = this.game;
+
+	this.camera_offset = { lat : 20, lon : 180, rad : 10 };
 
 	var boundary_a = this.game.boundary.body.a;
 

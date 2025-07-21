@@ -14,14 +14,14 @@ JL.webgl.load.init_class([ 'ui', 'item', 'power_gauge' ], function(){
 			left:0;
 			right:0;
 			text-align:center;
-			width:35vw;
-			bottom:2.25vw;
+			width:500px;
+			bottom:10px;
 		}
 
 		.ui-power-gauge .tick-marks,
 		.ui-power-gauge .sub-bars,
 		.ui-power-gauge .power-bar{
-			width:calc( 100% - 35px );
+			width:calc( 100% - 10px );
 			margin:auto;
 		}
 
@@ -29,19 +29,18 @@ JL.webgl.load.init_class([ 'ui', 'item', 'power_gauge' ], function(){
 			position:relative;
 			text-align:left;
 			color:#fff;
-			height:1.4vw;
 			line-height:1.4;
 			width:100%;
 
-			text-shadow: 0.1vw  0.1vw 0.1vw #0F2A47,
-				    -0.1vw  0.1vw 0.1vw #0F2A47,
-				     0.1vw -0.1vw 0.1vw #0F2A47,
-				    -0.1vw -0.1vw 0.1vw #0F2A47,
-				     0.1vw  0     0.1vw #0F2A47,
-				    -0.1vw  0     0.1vw #0F2A47,
-				    -0.1vw  0     0.1vw #0F2A47,
-				     0      0.1vw 0.1vw #0F2A47,
-				     0     -0.1vw 0.1vw #0F2A47;
+			text-shadow: 1px  1px 1px #0F2A47,
+				    -1px  1px 1px #0F2A47,
+				     1px -1px 1px #0F2A47,
+				    -1px -1px 1px #0F2A47,
+				     1px  0   1px #0F2A47,
+				    -1px  0   1px #0F2A47,
+				    -1px  0   1px #0F2A47,
+				     0    1px 1px #0F2A47,
+				     0   -1px 1px #0F2A47;
 		}
 
 		.ui-power-gauge .tick-marks.small{
@@ -50,14 +49,14 @@ JL.webgl.load.init_class([ 'ui', 'item', 'power_gauge' ], function(){
 
 		.ui-power-gauge .tick-marks .tick{
 			position:absolute;
-			width:2vw;
 			text-align:center;
+			font-size:8px;
 			transform:translateX(-50%);
 			z-index:1;
 		}
 
 		.ui-power-gauge .tick-marks.big .tick{
-			padding-top:2.45vw;
+			padding-top:18px;
 		}
 
 		.ui-power-gauge .tick-marks .tick:after{
@@ -70,38 +69,37 @@ JL.webgl.load.init_class([ 'ui', 'item', 'power_gauge' ], function(){
 		}
 
 		.ui-power-gauge .tick-marks.big .tick:after{
-			width : 0.2vw;
-			height: 0.5vw;
-			top   : 0.7vw;
+			width :  3px;
+			height:  7px;
+			top   : 10px;
 			background:#2B6199;
 
-			box-shadow:-0.1vw -0.1vw 0 #39BBFF,
-				    0.1vw -0.1vw 0 #39BBFF,
-				    0.1vw  0     0 #39BBFF,
-				   -0.1vw  0     0 #39BBFF,
-				    0     -0.1vw 0 #39BBFF;
+			box-shadow:-1px -1px 0 #39BBFF,
+				    1px -1px 0 #39BBFF,
+				    1px  0   0 #39BBFF,
+				   -1px  0   0 #39BBFF,
+				    0   -1px 0 #39BBFF;
 		}
 
 		.ui-power-gauge .tick-marks.small .tick:after{
-			width : 0.1vw;
-			height: 0.4vw;
-			bottom:-0.4vw;
+			width : 1px;
+			height: 6px;
+			bottom:-6px;
 			background:#0890DC;
 		}
 
 		.ui-power-gauge .power-bar-container{
 			background:rgba(19, 95, 185, 0.8);
-			padding:0.5vw;
-			border-radius:2vw;
-			border:0.12vw solid #87BFFF;
-			box-shadow:0.1vw 0.1vw 0.5vw #000;
+			padding:8px;
+			border-radius:10px;
+			border:1px solid #87BFFF;
+			box-shadow:1px 1px 5px #000;
 		}
 
 		.ui-power-gauge .power-bar{
 			position:relative;
-			height:1.25vw;
-			border-top   :0.1vw solid #00A8FF;
-			border-bottom:0.1vw solid #39BBFF;
+			height:16px;
+			border:1px solid #39BBFF;
 
 			background:#204977;
 			background: -webkit-linear-gradient( 0deg, #3A689C, #153A65 );
@@ -169,6 +167,12 @@ JL.webgl.load.init_class([ 'ui', 'item', 'power_gauge' ], function(){
 			background:    -moz-linear-gradient( 90deg, #AA5353, #5BFF5B, #AA5353 );
 			background:      -o-linear-gradient( 90deg, #AA5353, #5BFF5B, #AA5353 );
 			background:         linear-gradient( 90deg, #AA5353, #5BFF5B, #AA5353 );
+		}
+
+		@media only screen and (max-width : 600px) {
+			.ui-power-gauge{
+				width:250px;
+			}
 		}
 	`;
 
@@ -280,7 +284,7 @@ JL.webgl.load.init_class([ 'ui', 'item', 'power_gauge' ], function(){
 		var ui_info = this.ui_info.power_gauge || {};
 
 		var small_ticks = [ 5, 10, 15, 20, 30, 35, 40, 45, 55, 60, 65, 70, 80, 85, 90, 95 ];
-		var big_ticks   = [ 0, 25, 50, 75, 100 ];
+		var big_ticks   = [ 25, 50, 75, 100 ];
 
 		return '<div class="ui-game ui-power-gauge" onclick="' + ui_info.onclick + '">' + 
 			'<div class="power-bar-container">' + 

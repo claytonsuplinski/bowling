@@ -22,9 +22,9 @@ JL.webgl.space_object.player.prototype._on_instantiate = function( p ){
 	this.turn_bonuses = [];
 
 	this.computer_min_power    = 0.7;
-	this.computer_min_accuracy = 0.9;
+	this.computer_min_accuracy = 0.7;
 
-	this.ui_elements = JL.functions.filter_duplicates( ( this.ui_elements || [] ).concat([ 'scoreboard' ]) );
+	this.ui_elements = JL.functions.filter_duplicates( ( this.ui_elements || [] ).concat([ 'scoreboard', ]) );
 
 	if( !this.ui_info ) this.ui_info = {};
 	this.ui_info._game = this.game;
@@ -38,13 +38,21 @@ JL.webgl.space_object.player.prototype._on_instantiate = function( p ){
 	if( this.is_user ){
 		this.ui_elements.push( 'power_gauge' );
 		this.ui_info.power_gauge = {
+			// TODO : Modify the following value to make power_gauge go faster/slower.
+			// 	-Could be useful for difficulty levels.
+			// speed    : 2,
+			onclick  : 'JL.webgl.ui.item.power_gauge.on_user_input();',
 			callback : function(){ self.throw_ball(); },
 		};
 	}
 };
 
+JL.webgl.space_object.player.prototype.___on_init = function( p ){
+	if( !this.is_user ) this.key_bindings = this.key_bindings.filter( k => ![ 'walker', ].includes( k ) );
+};
+
 JL.webgl.space_object.player.prototype.on_select = function(){
-	this.cpu_throw_ball();
+	if( !this.is_done_with_turn() ) this.cpu_throw_ball();
 };
 
 JL.webgl.space_object.player.prototype.throw_ball = function( p ){
@@ -53,7 +61,6 @@ JL.webgl.space_object.player.prototype.throw_ball = function( p ){
 
 		var forward = JL.webgl.functions.get_forward_vector( this.matrix );
 
-		// TODO : Need to get power and accuracy from power_gauge UI
 		var power = 1;
 		if( p.power !== undefined ) power = p.power;
 
@@ -73,6 +80,8 @@ JL.webgl.space_object.player.prototype.throw_ball = function( p ){
 		if( this.hue_rotate !== undefined ){
 			JL.functions.set_nested_object( this.curr_ball, [ 'frags_float', 'hue_rotate' ], this.hue_rotate - 90 );
 		}
+
+		this.curr_ball.select();
 	}
 };
 
@@ -92,6 +101,7 @@ JL.webgl.space_object.player.prototype.cpu_throw_ball = function(){
 
 JL.webgl.space_object.player.prototype.is_done_with_turn = function(){
 	var curr_frame = this.frames[ this.curr_frame ];
+	if( !curr_frame ) return true;
 	return ( curr_frame.values.length >= curr_frame.max_values );
 };
 
@@ -101,6 +111,8 @@ JL.webgl.space_object.player.prototype.post_throw_update = function(){
         var num_knocked_down_pins = this.game.get_num_knocked_down_pins();
 
 	var curr_frame = this.frames[ this.curr_frame ];
+
+	if( !curr_frame ) return;
 
 	if( is_last_frame ){
 		if( curr_frame.values.length >= 1 ){
@@ -157,20 +169,16 @@ JL.webgl.space_object.player.prototype.post_throw_update = function(){
 		this.curr_frame++;
 		if( this.curr_frame >= this.frames.length ) this.finished = true;
 
+		this.game.next_player();
+
 		if( this.game.is_finished() ){
 			var game_result = this.game.get_result();
 
-			var result_title = ( game_result > 0 ? 'VICTORY' : ( game_result < 0 ? 'DEFEAT' : 'TIE' ) );
+			this.game.ui_info.finish.title = ( game_result > 0 ? 'VICTORY' : ( game_result < 0 ? 'DEFEAT' : 'TIE' ) );
 
-			// this.ui_info.game.finish.title = result_title;
+			this.game.select();
 
-			// TODO : test
-			alert( result_title );
-
-			return;
-		}
-		else{
-			this.game.next_player();
+			JL.webgl.ui.item.finish.show();
 		}
 	}
 	else{
@@ -178,10 +186,6 @@ JL.webgl.space_object.player.prototype.post_throw_update = function(){
 
         	if( this.game.get_num_knocked_down_pins() == this.game.num_pins ) this.game.reset_pins();
 
-		this.cpu_throw_ball();
+		this.select();
 	}
-
-	this.ui_draw();
-
-	console.log( this.score, ':', this.frames.map( x => JSON.stringify( x.values ) ).join(',') );
 };

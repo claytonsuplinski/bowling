@@ -1,15 +1,35 @@
 JL.webgl.space_object.bowling_game = JL.functions.inherit_class( function(){}, JL.webgl.space_object._regular, {
 	_inputs : [
-		{ key : 'num_pins'   , type :   'int', default : 10  , ui_order : '0_a', max : 500 },
-		{ key : 'pin_spacing', type : 'float', default :  0.8, ui_order : '0_b' },
-		{ key : 'num_cpus'   , type :   'int', default :  0  , ui_order : '0_c' },
-		{ key : 'ball_radius', type : 'float', default :  0.3, ui_order : '0_d' },
-		{ key : 'num_frames' , type :   'int', default : 10  , ui_order : '0_e', min : 1 },
+		{ key : 'num_pins'   , type :   'int', default : 10    , ui_order : '0_a', max : 500 },
+		{ key : 'pin_spacing', type : 'float', default :  0.8  , ui_order : '0_b' },
+		{ key : 'num_cpus'   , type :   'int', default :  0    , ui_order : '0_c' },
+		{ key : 'ball_radius', type : 'float', default :  0.285, ui_order : '0_d' },
+		{ key : 'num_frames' , type :   'int', default : 1    , ui_order : '0_e', min : 1 },
+		// { key : 'num_frames' , type :   'int', default : 10    , ui_order : '0_e', min : 1 },
 	]
 } );
 
 JL.webgl.space_object.bowling_game.prototype._constructor = function( p ){
 	this.positions = [];
+
+	try{ Object.assign( this, JL.webgl.variables.bowling ); } catch(e){}
+
+	this.camera_offset = { lat : 15, lon : 180, rad : 10 };
+
+	this.ui_elements = JL.functions.filter_duplicates( ( this.ui_elements || [] ).concat([ 'scoreboard', 'finish', ]) );
+
+	if( !this.ui_info ) this.ui_info = {};
+	this.ui_info._game  = this;
+	this.ui_info.finish = {};
+
+	this.pins_x_offset =  0;
+	this.pins_y_offset =  0;
+	this.pins_z_offset = 20;
+
+	var min_x =  Infinity;
+	var max_x = -Infinity;
+	var min_z =  0;
+	var max_z = -Infinity;
 
 	var z = 0;
 	while( this.positions.length < this.num_pins ){
@@ -24,11 +44,19 @@ JL.webgl.space_object.bowling_game.prototype._constructor = function( p ){
 			else{
 				x *= ( Math.floor( r_i / 2 ) + row_offset );
 			}
+
+			var curr_x = this.x + this.pins_x_offset + x;
+			var curr_z = this.z + this.pins_z_offset + ( z * this.pin_spacing );
+
+			if( curr_x < min_x ) min_x = curr_x;
+			if( curr_x > max_x ) max_x = curr_x;
+			if( curr_z < min_z ) min_z = curr_z;
+			if( curr_z > max_z ) max_z = curr_z;
 			
 			this.positions.push({
-				x : this.x + x,
-				y : 0,
-				z : this.z + ( z * this.pin_spacing ),
+				x : curr_x,
+				y : this.pins_y_offset,
+				z : curr_z,
 			});
 
 			if( this.positions.length >= this.num_pins ) break;
@@ -48,17 +76,34 @@ JL.webgl.space_object.bowling_game.prototype._constructor = function( p ){
 		);
 	}
 
+	var boundary_padding_x = 10;
+	var boundary_padding_z = 20;
+
+	var boundary_min_x = min_x - boundary_padding_x;
+	var boundary_max_x = max_x + boundary_padding_x;
+
+	var boundary_min_z = min_z - boundary_padding_z;
+	var boundary_max_z = max_z + boundary_padding_z;
+
 	this.boundary = this.environment.add_collider({
 		shapes   : [
-			{ type : 'cube', dimensions : { x : 50, y : 50, z :  5 }, position : { x :   0, y : 50, z : -50 } },
-			{ type : 'cube', dimensions : { x : 50, y : 50, z :  5 }, position : { x :   0, y : 50, z :  50 } },
+			{ type : 'cube', dimensions : { x : 50, y : 50, z :  5 }, position : { x :   0, y : 50, z : boundary_min_z } },
+			{ type : 'cube', dimensions : { x : 50, y : 50, z :  5 }, position : { x :   0, y : 50, z : boundary_max_z } },
 
-			{ type : 'cube', dimensions : { x :  5, y : 50, z : 50 }, position : { x : -50, y : 50, z :   0 } },
-			{ type : 'cube', dimensions : { x :  5, y : 50, z : 50 }, position : { x :  50, y : 50, z :   0 } },
+			{ type : 'cube', dimensions : { x :  5, y : 50, z : 50 }, position : { x : boundary_min_x, y : 50, z :   0 } },
+			{ type : 'cube', dimensions : { x :  5, y : 50, z : 50 }, position : { x : boundary_max_x, y : 50, z :   0 } },
 		],
-		position : { x : this.x, y : 0, z : this.z },
+		position : { x : 0, y : 0, z : 0 },
 		collision_filter : 'still',
-	}, JL.webgl.space_object.player );
+	});
+
+	this.user_barrier = this.environment.add_collider({
+		shapes   : [
+			{ type : 'cube', dimensions : { x : 50, y : 50, z :  1 }, position : { x :   0, y : 50, z : min_z + 2 } },
+		],
+		position : { x : 0, y : 0, z : 0 },
+		collision_filter : 'user_sensor',
+	});
 
 	this.players = [];
 
@@ -89,7 +134,7 @@ JL.webgl.space_object.bowling_game.prototype._constructor = function( p ){
 
 JL.webgl.space_object.bowling_game.prototype.reset_all_players_physics = function(){
 	for( var i = 0; i < this.players.length; i++ ){
-		this.players[ i ].set_physics_position( this.x + 5, this.y + 0.1, this.z - 20 - ( 5 * i ) );
+		this.players[ i ].set_physics_position( this.x + 5, this.y + 0.1, this.z - ( 5 * i ) );
 		this.players[ i ].set_physics_rotation( 0, 0, 0, 1 );
 	}
 };
@@ -102,7 +147,7 @@ JL.webgl.space_object.bowling_game.prototype.next_player = function(){
 
 	this.curr_player = this.players[ this.curr_player_idx ];
 
-	this.curr_player.set_physics_position( this.x, this.y + 0.1, this.z - 20 );
+	this.curr_player.set_physics_position( this.x, this.y + 0.1, this.z );
 
 	this.curr_player.select();
 };

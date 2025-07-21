@@ -37,7 +37,7 @@ JL.webgl.load.init_class([ 'ui', 'item', 'scoreboard' ], function(){
 
 		.ui-scoreboard .player .name{
 			background:rgba(0,0,0,0.2);
-			width:100px;
+			width:60px;
 			border-right:1px solid #91c0ff;
 			padding:0 5px;
 		}
@@ -108,7 +108,6 @@ JL.webgl.load.init_class([ 'ui', 'item', 'scoreboard' ], function(){
 	`;
 
 	class_obj.toggle_collapse = function(){
-		console.log( this.collapsed );
 		this.collapsed = !this.collapsed;
 		$( '.ui-scoreboard .players .frames' )[ ( this.collapsed ? 'add' : 'remove' ) + 'Class' ]( 'collapsed' );
 		$( '.ui-scoreboard .collapse-toggle' ).html( this.collapsed ? 'Expand' : 'Collapse' );

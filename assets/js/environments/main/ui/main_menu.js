@@ -86,18 +86,6 @@ JL.webgl.ui.item.main_menu.css = `
 	}
 `;
 
-JL.webgl.ui.item.main_menu.draw = function(){
-	var self = this;
-
-	// $( '.ui-main-menu .settings' ).html(
-	// 	this.ui_info.map(function( option ){
-	// 		return '<div class="option" onclick="' + option.onclick + '">' +
-	// 			option.name +
-	// 		'</div>';
-	// 	}).join('')
-	// );
-};
-
 JL.webgl.ui.item.main_menu.ui_framework = function(){
 	return `<div id="main-menu" class="ui-main-menu">
 		<div class="title">
@@ -119,61 +107,17 @@ JL.webgl.ui.item.main_menu.ui_onselect = function(){
 
 	// var ui_info = _this.ui_info = this.ui_info.main_menu;
 
-	_this.draw();
+	if( !JL.webgl.variables.bowling ) JL.webgl.variables.bowling = {};
 
-	new JL.json_edit({
+	_this.json_edit = new JL.json_edit({
 		parent    : { id : '#main-menu-settings' },
-		on_change : function( obj, path, val ){
-			console.log( obj, path, val );
-		},
-		value : this.environment.settings,
+		value     : JL.webgl.variables.bowling,
 		structure : [
+			{ key : 'lane', label : 'Lane', type : 'dropdown', options : [
+				{ name : 'Standard', value : 'standard', },
+			] },
 			{ key : 'num_pins', label : 'Number of Pins', type : 'int', default : 10, min : 0, max : 1000 },
 			{ key : 'num_cpus', label : 'CPUs'          , type : 'int', default :  0, min : 0, max :   10 },
-
-			// { key : 'name'               , type : 'str'      , },
-			// { key : 'x'                  , type : 'float'    , default : 0, ui_row : '0_pos' },
-			// { key : 'y'                  , type : 'float'    , default : 0, ui_row : '0_pos' },
-			// { key : 'z'                  , type : 'float'    , default : 0, ui_row : '0_pos' },
-			// { key : 'auto_update'        , type : 'bool'     , },
-			// { key : 'tile_num_segments'  , type : 'int'      , default : 128 },
-			// { key : 'display_type'       , type : 'dropdown' , default : 'radial', options : [ 'radial', 'nearest' ] },
-			// { key : 'heightmaps'         , type : 'str'      , },
-			// { key : 'arr_of_objs'        , type : 'arr'      , entries_collapsed : 1, 
-			// 	structure : [
-			// 		{ key : 'x'  , type : 'float', default : 0   },
-			// 		{ key : 'y'  , type : 'bool' , show_while_collapsed : true, },
-			// 		{ key : 'abc', type : 'str'  , default : 'test', autocomplete : [ 'abc', 'bcd', 'cde', 'def', ] },
-			// 		{ key : 'def', type : 'arr'  , 
-			// 			structure : [
-			// 				{ key : 'x', type : 'float', default : 123 },
-			// 			]
-			// 		},
-			// 	]
-			// },
-			// { key : 'arr_of_vals', type : 'arr',
-			// 	structure : { type : 'float', default : 123 },
-			// },
-			// { key : 'arr_of_arrs', type : 'arr', 
-			// 	structure : { type : 'arr', length : 3, 
-			// 		structure : { type : 'int', default : 4 },
-			// 	},
-			// },
-			// { key : 'custom_field', type : 'custom', ui_row : '0_obj', 
-			// 	get_default    : function(){
-			// 		return {
-			// 			type   : 'cube',
-			// 			label  : [ 'default_item' ],
-			// 			params : {
-			// 				x : 0.001,
-			// 				y : 0.001,
-			// 				z : 0.001,
-			// 			},
-			// 		};
-			// 	},
-			// 	get_value_name : function( v ){ return ( v.label || v.keys ).join('/'); },
-			// 	edit_value     : function( path, value ){ edit_val( path, value ); },
-			// },
 		],
 	});
 };
