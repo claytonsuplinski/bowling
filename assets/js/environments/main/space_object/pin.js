@@ -2,7 +2,7 @@ JL.webgl.space_object.pin = JL.functions.inherit_class( function(){}, JL.webgl.s
 	_inputs_assign  : [
 		{ path : [ 'graphics_objects' ], value : {
 			get_default : function(){
-				var label = [ '_bowling', 'pin' ];
+				var label = [ 'bowling', 'pin' ];
 				var default_g_o = JL.webgl.functions.get_graphics_object( label );
 				if( !default_g_o ) default_g_o = JL.webgl.functions.create_graphics_object({ label, async : false, });
 				return [ default_g_o ];
