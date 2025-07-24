@@ -4,8 +4,8 @@ JL.webgl.space_object.bowling_game = JL.functions.inherit_class( function(){}, J
 		{ key : 'pin_spacing', type : 'float', default :  0.8  , ui_order : '0_b' },
 		{ key : 'num_cpus'   , type :   'int', default :  0    , ui_order : '0_c' },
 		{ key : 'ball_radius', type : 'float', default :  0.285, ui_order : '0_d' },
-		{ key : 'num_frames' , type :   'int', default : 1    , ui_order : '0_e', min : 1 },
-		// { key : 'num_frames' , type :   'int', default : 10    , ui_order : '0_e', min : 1 },
+		// { key : 'num_frames' , type :   'int', default : 1    , ui_order : '0_e', min : 1 },
+		{ key : 'num_frames' , type :   'int', default : 10    , ui_order : '0_e', min : 1 },
 	]
 } );
 
@@ -70,7 +70,7 @@ JL.webgl.space_object.bowling_game.prototype._constructor = function( p ){
 	for( var position of this.positions ){
 		this.pins.push(
 			this.environment.add_space_object({
-				collider      : { position, },
+				collider      : { position, sleep : {}, },
 				parent_object : this,
 			}, JL.webgl.space_object.pin )
 		);
@@ -137,6 +137,10 @@ JL.webgl.space_object.bowling_game.prototype.reset_all_players_physics = functio
 		this.players[ i ].set_physics_position( this.x + 5, this.y + 0.1, this.z - ( 5 * i ) );
 		this.players[ i ].set_physics_rotation( 0, 0, 0, 1 );
 	}
+};
+
+JL.webgl.space_object.bowling_game.prototype.clear_all_pins_physics = function(){
+	for( var pin of this.pins ) pin.collider.body.clearForces();
 };
 
 JL.webgl.space_object.bowling_game.prototype.next_player = function(){

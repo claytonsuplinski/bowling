@@ -23,3 +23,13 @@ a{
 	-ms-user-select: none;
 	user-select: none;
 }
+
+.jl-webgl-mobile-arrow-keys div{
+	right:auto !important;
+}
+
+.jl-webgl-mobile-arrow-keys .arrow-down{ left:27px !important; bottom: 55px !important; }
+.jl-webgl-mobile-arrow-keys .arrow-up  { left:27px !important; bottom:125px !important; }
+
+.jl-webgl-mobile-arrow-keys .arrow-left { bottom:90px !important; left: 5px !important; }
+.jl-webgl-mobile-arrow-keys .arrow-right{ bottom:90px !important; left:45px !important; }

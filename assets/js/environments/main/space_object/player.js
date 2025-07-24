@@ -24,7 +24,7 @@ JL.webgl.space_object.player.prototype._on_instantiate = function( p ){
 	this.computer_min_power    = 0.7;
 	this.computer_min_accuracy = 0.7;
 
-	this.ui_elements = JL.functions.filter_duplicates( ( this.ui_elements || [] ).concat([ 'scoreboard', ]) );
+	p.ui_elements = JL.functions.filter_duplicates( ( p.ui_elements || [] ).concat([ 'scoreboard', ]) );
 
 	if( !this.ui_info ) this.ui_info = {};
 	this.ui_info._game = this.game;
@@ -36,7 +36,7 @@ JL.webgl.space_object.player.prototype._on_instantiate = function( p ){
 	for( var i = 0; i < this.game.num_frames; i++ ) this.frames.push({ values : [], max_values : ( i != last_frame_idx ? 2 : 3 ) });
 
 	if( this.is_user ){
-		this.ui_elements.push( 'power_gauge' );
+		p.ui_elements.push( 'power_gauge' );
 		this.ui_info.power_gauge = {
 			// TODO : Modify the following value to make power_gauge go faster/slower.
 			// 	-Could be useful for difficulty levels.
@@ -183,6 +183,8 @@ JL.webgl.space_object.player.prototype.post_throw_update = function(){
 	}
 	else{
 		this.game.remove_knocked_down_pins();
+
+		this.game.clear_all_pins_physics();
 
         	if( this.game.get_num_knocked_down_pins() == this.game.num_pins ) this.game.reset_pins();
 

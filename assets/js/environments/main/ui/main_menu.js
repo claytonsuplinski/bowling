@@ -95,25 +95,19 @@ JL.webgl.ui.item.main_menu.ui_framework = function(){
 		<div id="main-menu-settings">
 		</div>
 		<div class="options">
-			<div class="option" onclick="JL.webgl.functions.load_and_select_environment({ keys : [ \'main\', \'zone_game\' ] });">Start Game</div>
+			<div class="option" onclick="JL.webgl.functions.load_and_select_environment({ keys : [ \'main\', \'lane_\' + JL.webgl.variables.bowling.lane ] });">Start Game</div>
 		</div>
 	</div>`;
 };
 
 JL.webgl.ui.item.main_menu.ui_onselect = function(){
-	var _this = JL.webgl.ui.item.main_menu;
-
-	_this.target = this;
-
-	// var ui_info = _this.ui_info = this.ui_info.main_menu;
-
 	if( !JL.webgl.variables.bowling ) JL.webgl.variables.bowling = {};
 
-	_this.json_edit = new JL.json_edit({
+	new JL.json_edit({
 		parent    : { id : '#main-menu-settings' },
 		value     : JL.webgl.variables.bowling,
 		structure : [
-			{ key : 'lane', label : 'Lane', type : 'dropdown', options : [
+			{ key : 'lane', label : 'Lane', type : 'dropdown', default : 'standard', options : [
 				{ name : 'Standard', value : 'standard', },
 			] },
 			{ key : 'num_pins', label : 'Number of Pins', type : 'int', default : 10, min : 0, max : 1000 },
