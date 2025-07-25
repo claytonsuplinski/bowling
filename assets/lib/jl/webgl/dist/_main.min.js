@@ -9015,6 +9015,34 @@ JL.webgl.functions.delete_graphics_object = function( path ){
 	});
 };
 
+JL.webgl.functions.get_graphics_object_id = function( g_o ){
+	var g_o_params = ( g_o.params || g_o );
+	var output = Object.keys( JL.webgl.active_environment._environment_config.graphics_objects ).find(function( id ){
+		var m = JL.webgl.active_environment._environment_config.graphics_objects[ id ];
+		var m_params = ( m.params || m );
+		return [ 'keys', 'label' ].every(function( k ){
+			return JL.functions.arrays_equal( m_params[ k ] || [], g_o_params[ k ] || [] );
+		});
+	});
+	if( output === undefined ) return;
+	return parseInt( output );
+};
+
+JL.webgl.functions.index_graphics_object = function( g_o ){
+	if( g_o === undefined ) return;
+
+	var g_o_id;
+	var g_o_cfg = this.get_graphics_object( g_o )._config;
+	g_o_id = this.get_graphics_object_id( g_o_cfg );
+	if( g_o_id === undefined ){
+		g_o_id = 1;
+		while( JL.webgl.active_environment._environment_config.graphics_objects[ g_o_id ] ) g_o_id++;
+		JL.webgl.active_environment._environment_config.graphics_objects[ g_o_id ] = g_o_cfg;
+	}
+
+	return g_o_id;
+};
+
 JL.webgl.functions.get_graphics_object = function( id ){
 	if( id instanceof JL.webgl.graphics_object._main ) return id;
 	if( JL.functions.is_array(  id ) ) return JL.functions.get_nested_object( JL.webgl.graphics_objects, id );
@@ -10141,6 +10169,9 @@ JL.webgl.load.assets = function( p ){
 							};
 						})
 					);
+
+					while( accumulator.groups.length && !self.groups[ accumulator.groups[0] ] ) accumulator.groups.shift();
+					
 					loading_queue = loading_queue.concat(
 						accumulator.groups.map(function( name ){ return { type : 'group', name }; })
 					);
@@ -15347,6 +15378,7 @@ JL.webgl.graphics_object._main.edit_ui_on_change_effect = function( p ){
 	var path_instanced_ranges = path_base.concat( 'instanced_ranges' );
 	var path_attr             = path_base.concat( 'attr' );
 	var path_keys             = path_base.concat( 'keys' );
+	var path_type             = path_base.concat( '_type' );
 	var path_properties       = path_base.concat( 'properties' );
 	var path_effects          = path_properties.concat( 'effects' );
 	var path_num_instances    = path_attr.concat( 'num_instances' );
@@ -15359,8 +15391,12 @@ JL.webgl.graphics_object._main.edit_ui_on_change_effect = function( p ){
 	//-------------------------//
 	var named_textures = JL.functions.get_nested_object( p.root_value, path_named_textures ) || {};
 
+	var uses_keys = false;
+	try{ uses_keys = JL.webgl.graphics_object[ JL.functions.get_nested_object( p.root_value, path_type ) ].prototype._inputs.find( x => x.key == 'keys' ); } catch(e){}
+
 	var textures = JL.webgl.functions.get_textures_list( value_base );
-	if( JL.functions.get_nested_object( p.root_value, path_keys ) ) textures = textures.filter( t => t[ 1 ] !== 'main' );
+	if( uses_keys && JL.functions.get_nested_object( p.root_value, path_keys ) ) textures = textures.filter( t => t[ 1 ] !== 'main' );
+
 	for( var u of textures ){
 		var path_texture = path_named_textures.concat( u[1] );
 		try     { var texture_val = JL.functions.get_nested_object( p.root_value, path_texture ); }
@@ -16993,6 +17029,20 @@ JL.webgl.graphics_object._main.prototype.load_polygon_vertices = function( p ){
 
 	if( !p.flip ) vertex_indices.reverse();
 
+	// TODO : The following doesn't work correctly. Can't go off of normal vectors. Need to go off of clockwise ordering.
+	// 	-Useful for s_o._building floors / ceilings.
+	if( p.face_dir ){
+		var fd = p.face_dir;
+		var axis_idx = 0;
+		if     ( fd.axis == 'y' ) axis_idx = 1;
+		else if( fd.axis == 'z' ) axis_idx = 2;
+
+		if     ( !fd.invert && _this.vn[ axis_idx ] < 0 ) vertex_indices.reverse();
+		else if(  fd.invert && _this.vn[ axis_idx ] > 0 ) vertex_indices.reverse();
+		// if     ( !fd.invert && _this.vn[ axis_idx ] < 0 ) _this.vn = _this.vn.map( x => -x );
+		// else if(  fd.invert && _this.vn[ axis_idx ] > 0 ) _this.vn = _this.vn.map( x => -x );
+	}
+
 	_this.vertex_indices.push( ...vertex_indices );
 };
 
@@ -18262,6 +18312,11 @@ JL.webgl.graphics_object.polygon = JL.functions.inherit_class( function( p ){
 }, JL.webgl.graphics_object._main, { _inputs : [
 	{ key : 'points'        , type : 'arr'  , val_type : 'arr', val_default : [0,0] },
 	{ key : 'texture_repeat', type : 'float', default : 1 },
+	{ key : 'flip'          , type : 'bool' },
+	{ key : 'face_dir'      , type : 'obj', optional : true, structure : [
+		{ key : 'axis'  , type : 'dropdown', options : [ 'x', 'y', 'z' ] },
+		{ key : 'negate', type : 'bool' },
+	] },
 ] } );
 
 JL.webgl.graphics_object.polygon.prototype.load_vertices = function( p ){
@@ -26540,7 +26595,10 @@ JL.webgl.space_object._wall = JL.functions.inherit_class( function(){}, JL.webgl
 		{ key : 'size'      , type : 'float', default : 1, ui_order : '0_vals' },
 		// 2025-06-10
 		{ key : 'graphics_object', type : 'webgl.graphics_object', ui_order : '0_vals_g_o', 
-			get_default : function(){ try{ return JL.webgl.functions.get_graphics_object([ '_default_wall' ]).copy({ unique_label : true }); } catch(e){} }, 
+			get_default : function(){
+				try{ var g_o = JL.webgl.functions.get_graphics_object([ '_default_wall' ]).copy({ unique_label : true }); } catch(e){}
+				try{ return JL.webgl.functions.index_graphics_object( g_o ); } catch(e){ return g_o; }
+			}, 
 		// { key : 'graphics_object', type : 'webgl.graphics_object', ui_order : '0_vals_g_o', default : '_default_wall', get_options : function(){
 			get_options : function(){
 				return JL.webgl.space_object._building.get_wall_graphics_object_options().filter( m => !m.startsWith( '_in_library/' ) );
@@ -27271,18 +27329,24 @@ JL.webgl.space_object._building.prototype.on_physics_init = function( p ){
 		].forEach(function( part_name ){
 			var cap_cfg = level[ part_name ];
 			if( cap_cfg ){
-				var flip = false;
+				// 2025-07-24
+				var face_dir = { axis : 'y' };
+				// var flip = false;
 
 				var y_offset = 0;
 
 				switch( part_name ){
 					case 'ceiling_down':
-						flip = true;
+						// 2025-07-24
+						face_dir = { axis : 'y', invert : true };
+						// flip = true;
 					case 'ceiling_up':
 						y_offset = ( level.size || 1 );
 						break;
 					case 'floor_down':
-						flip = true;
+						// 2025-07-24
+						face_dir = { axis : 'y', invert : true };
+						// flip = true;
 						break;
 				}
 
@@ -27323,7 +27387,10 @@ JL.webgl.space_object._building.prototype.on_physics_init = function( p ){
 					var existing_g_o = JL.webgl.functions.get_graphics_object( cap_cfg.graphics_object );
 
 					var g_o_params = {
-						points, hole_indices, flip,
+						// 2025-07-24
+						points, hole_indices, face_dir,
+						// points, hole_indices, flip,
+
 						absolute_texture_repeat : true,
 						// TODO : Get this to work. Seems to be needed for "add_graphics_object_to_be_condensed"
 						// no_buffer               : 1,
@@ -30052,33 +30119,12 @@ JL.webgl.ui.item.edit.clean_up_graphics_objects = function(){
 	this.draw_top_menu_bar();
 };
 
-JL.webgl.ui.item.edit.get_graphics_object_id = function( g_o ){
-	var g_o_params = ( g_o.params || g_o );
-	var output = Object.keys( JL.webgl.active_environment._environment_config.graphics_objects ).find(function( id ){
-		var m = JL.webgl.active_environment._environment_config.graphics_objects[ id ];
-		var m_params = ( m.params || m );
-		return [ 'keys', 'label' ].every(function( k ){
-			return JL.functions.arrays_equal( m_params[ k ] || [], g_o_params[ k ] || [] );
-		});
-	});
-	if( output === undefined ) return;
-	return parseInt( output );
-};
-
 JL.webgl.ui.item.edit.index_graphics_object = function( g_o ){
 	if( g_o === undefined ) return;
 
-	var g_o_id;
-	var g_o_cfg = JL.webgl.functions.get_graphics_object( g_o )._config;
-	g_o_id = this.get_graphics_object_id( g_o_cfg );
-	if( g_o_id === undefined ){
-		g_o_id = 1;
-		while( JL.webgl.active_environment._environment_config.graphics_objects[ g_o_id ] ) g_o_id++;
-		JL.webgl.active_environment._environment_config.graphics_objects[ g_o_id ] = g_o_cfg;
-	}
-
 	this.draw_top_menu_bar();
-	return g_o_id;
+
+	return JL.webgl.functions.index_graphics_object( g_o );
 };
 
 JL.webgl.ui.item.edit.update_all_graphics_objects = function(){
@@ -30208,7 +30254,14 @@ JL.webgl.ui.item.edit.get_save_output = function(){
 		}
 	}
 
-	return JSON.stringify( cfg );
+	try{
+		return JSON.stringify( cfg );
+	}
+	catch(e){
+		console.log( 'Error: JL.webgl.ui.item.edit.get_save_output failed to stringify environment config.' );
+		console.log( e );
+		console.log( cfg );
+	}
 };
 
 JL.webgl.ui.item.edit.save = function( p ){
@@ -30227,7 +30280,7 @@ JL.webgl.ui.item.edit.save = function( p ){
 		output_str = JL.functions.format_json( output_obj );
 	}
 	else if( p.curr_graphics_object ){
-		output_obj = output_obj.graphics_objects[ this.get_graphics_object_id( this.item_types.graphics_object.curr_graphics_object ) ] || this.item_types.graphics_object.curr_graphics_object._config;
+		output_obj = output_obj.graphics_objects[ JL.webgl.functions.get_graphics_object_id( this.item_types.graphics_object.curr_graphics_object ) ] || this.item_types.graphics_object.curr_graphics_object._config;
 		output_str = JL.functions.format_json( output_obj );
 	}
 	else if( p.curr_environment ){
@@ -30945,7 +30998,7 @@ JL.webgl.ui.item.edit.item_types.graphics_object.edit_graphics_object = function
 		var curr_graphics_object_cfg                    = this.graphics_objects[ idx ];
 		this.original_curr_graphics_object              = JL.functions.get_nested_object( JL.webgl.graphics_objects, curr_graphics_object_cfg.path ).copy();
 		this.curr_graphics_object                       = JL.functions.get_nested_object( JL.webgl.graphics_objects, curr_graphics_object_cfg.path ).copy();
-		this.curr_graphics_object_environment_config_id = JL.webgl.ui.item.edit.get_graphics_object_id( this.curr_graphics_object._config );
+		this.curr_graphics_object_environment_config_id = JL.webgl.functions.get_graphics_object_id( this.curr_graphics_object._config );
 
 		try     { var effects = JL.webgl.functions.get_full_effects_list( this.curr_graphics_object.properties.effects ) || []; }
 		catch(e){ var effects = []; }

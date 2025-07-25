@@ -22,7 +22,7 @@ JL.webgl.space_object.player.prototype._on_instantiate = function( p ){
 	this.turn_bonuses = [];
 
 	this.computer_min_power    = 0.7;
-	this.computer_min_accuracy = 0.7;
+	this.computer_min_accuracy = 0.6;
 
 	p.ui_elements = JL.functions.filter_duplicates( ( p.ui_elements || [] ).concat([ 'scoreboard', ]) );
 
@@ -59,19 +59,21 @@ JL.webgl.space_object.player.prototype.throw_ball = function( p ){
 	if( !this.curr_ball ){
 		var p = p || {};
 
-		var forward = JL.webgl.functions.get_forward_vector( this.matrix );
-
 		var power = 1;
 		if( p.power !== undefined ) power = p.power;
 
 		var accuracy = 1;
 		if( p.accuracy !== undefined ) accuracy = p.accuracy;
 
+		var force_x = undefined;
+		if( p.force_x ) force_x = 100000 * p.force_x;
+
 		this.curr_ball = this.throw_projectile({
 			obj_params     : { y : 0.5, radius : p.ball_radius || 0.3, parent_object : this, },
 			obj_type       : JL.webgl.space_object.ball,
 			forward_offset : 1,
 			spread_y       : 20,
+			force_x,
 			force_y        :  1000000,
 			force_z        : 10000000 * power,
 			accuracy,
