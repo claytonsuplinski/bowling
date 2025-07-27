@@ -5,11 +5,11 @@ Object.assign( JL.webgl.load.groups, {
 				init : function(callback){
 					JL.webgl.load.graphics_objects_list( this, [
 						{
-							label  : [ 'environments', 'main', 'antarctica' ],
+							label  : [ 'environments', 'main', 'menu_target' ],
 							type   : "extruded_png",
 							params : {
-								image     : './assets/textures/environments/main/antarctica.png',
-								depth     : 0.1,
+								image     : './assets/textures/environments/main/bowling_clipart_02.png',
+								depth     : 0.5,
 								back_face : true,
 							}
 						},

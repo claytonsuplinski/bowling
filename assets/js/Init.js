@@ -20,6 +20,8 @@ JL.webgl.init({
 				if( !JL.webgl.variables.throw_curr ){
 					if( JL.webgl.active_camera.target.is_user ){
 						JL.webgl.variables.throw_curr = { x : touch.screenX, y : touch.screenY, t : ( new Date() ).getTime() };
+
+						JL.webgl.variables.throw_v = [];
 					}
 				}
 			}, }],
@@ -27,31 +29,67 @@ JL.webgl.init({
 				if( JL.webgl.variables.throw_curr ){
 					JL.webgl.variables.throw_prev = JL.webgl.variables.throw_curr;
 					JL.webgl.variables.throw_curr = { x : touch.screenX, y : touch.screenY, t : ( new Date() ).getTime() };
+
+					var t_diff = JL.webgl.variables.throw_curr.t - JL.webgl.variables.throw_prev.t;
+
+					JL.webgl.variables.throw_v.push({
+						x : ( JL.webgl.variables.throw_prev.x - JL.webgl.variables.throw_curr.x ) / t_diff,
+						y : ( JL.webgl.variables.throw_prev.y - JL.webgl.variables.throw_curr.y ) / t_diff,
+					});
 				}
 			}, }],
 			touch_end : [{ fn : function( e ){
 				if( JL.webgl.variables.throw_prev ){
-					var prev = JL.webgl.variables.throw_prev;
-					var curr = JL.webgl.variables.throw_curr;
+					var v_vals = JL.webgl.variables.throw_v.slice( -5 );
 
-					var y_delta = prev.y - curr.y;
+					var v_x = 0;
+					var v_y = 0;
+					for( var v of v_vals ){
+						v_x += v.x;
+						v_y += v.y;
+					}
+					v_x /= v_vals.length;
+					v_y /= v_vals.length;
 
-					if( y_delta > 2 ){
-						var t_factor = 1 - ( 0.05 * ( JL.functions.clamp( curr.t - prev.t, 5, 25 ) - 5 ) / 20 );
+					// -------------
 
-						var power = Math.min( ( JL.functions.clamp( y_delta, 0, 20 ) / 15 ) * t_factor, 1 );
+					if( v_y > 0.2 ){
+						var power = 0.5 * Math.min( v_y, 1 ) + 0.5;
 
-						if( power > 0.4 ){
-							if( JL.webgl.active_camera.target.is_user ){
-								JL.webgl.active_camera.target.throw_ball({ power,
-									force_x : prev.x - curr.x,
-								});
-							}
+						if( JL.webgl.active_camera.target.is_user ){
+							JL.webgl.active_camera.target.throw_ball({ power,
+								force_x : 10 * v_x,
+							});
 						}
 					}
 
+					// -------------
+
+					// var prev = JL.webgl.variables.throw_prev;
+					// var curr = JL.webgl.variables.throw_curr;
+
+					// var y_delta = prev.y - curr.y;
+
+					// if( y_delta > 0 ){
+					// 	var t_factor = 1 - ( 0.05 * ( JL.functions.clamp( curr.t - prev.t, 5, 25 ) - 5 ) / 20 );
+
+					// 	// var power = Math.min( ( JL.functions.clamp( y_delta, 0, 20 ) / 15 ) * t_factor, 1 );
+					// 	var power = 0.5 * Math.min( ( JL.functions.clamp( y_delta, 0, 20 ) / 15 ) * t_factor, 1 ) + 0.5;
+
+					// 	// if( power > 0.4 ){
+					// 		if( JL.webgl.active_camera.target.is_user ){
+					// 			JL.webgl.active_camera.target.throw_ball({ power,
+					// 				force_x : 0.4 * ( prev.x - curr.x ),
+					// 			});
+					// 		}
+					// 	// }
+					// }
+
+					// -------------
+
 					delete JL.webgl.variables.throw_prev;
 					delete JL.webgl.variables.throw_curr;
+					delete JL.webgl.variables.throw_v;
 				}
 			}, }],
 		},

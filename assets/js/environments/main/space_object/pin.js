@@ -87,5 +87,8 @@ JL.webgl.space_object.pin.prototype.is_knocked_down = function(){
 	if( this.physics_disabled ) return true;
 
 	var position = this.get_world_transform().getOrigin();
-	return ( [ 'x', 'z' ].find( x => Math.round( 10 * position[ x ]() ) / 10 != this.original_position[ x ] ) );
+
+	if( Math.abs( this.original_position.x - position.x() ) > 0.01 ) return true;
+	if( Math.abs( this.original_position.z - position.z() ) > 0.01 ) return true;
+	return false;
 };

@@ -9,7 +9,7 @@ JL.webgl.ui.item.main_menu.css = `
 		left:0;
 		width :100vw;
 		height:100vh;
-		background:linear-gradient( 90deg, rgb(255, 255, 255) 0%, rgba(255, 255, 255, 0.75) 40%, rgba(255,255,255, 0.3) 70%, rgba(255,255,255,0) 100% );
+		background:linear-gradient( 90deg, rgb(0, 0, 0) 0%, rgba(236, 164, 164, 0.75) 40%, rgba(255,255,255, 0.3) 70%, rgba(255,255,255,0) 100% );
 		overflow:auto;
 	}
 
@@ -17,7 +17,7 @@ JL.webgl.ui.item.main_menu.css = `
 		font-size:30px;
 		background:#265d71;
 		background:linear-gradient( -90deg, rgba(162, 211, 229, 0.11), #264a71 );
-		border-bottom:1px solid rgba(0,0,0,0.25);
+		border-bottom:1px solid rgba(255, 255, 255, 0.3);
 		width:100%;
 		padding:20px;
 		color:#fff;
@@ -28,7 +28,7 @@ JL.webgl.ui.item.main_menu.css = `
 	}
 
 	.ui-main-menu .title img{
-		height:43px;
+		height:34px;
 		margin-right:4px;
 		vertical-align:top;
 	}
@@ -38,11 +38,14 @@ JL.webgl.ui.item.main_menu.css = `
 	}
 
 	.ui-main-menu .options .option{
-		width:50vw;
+		width:100vw;
+		max-width:350px;
 		font-size:16px;
+		font-weight:700;
+		color:#ffeded;
 		cursor:pointer;
-		background:linear-gradient( 90deg, rgba(237, 252, 255, 0.9), rgba(255, 255, 255, 0) );
-		border:1px solid rgba(0,0,0,0.25);
+		background:linear-gradient( 90deg, rgba(119, 8, 8, 0.9), rgba(255, 255, 255, 0) );
+		border:1px solid rgba(255, 156, 156, 0.9);
 		border-left:0;
 		border-right:0;
 		padding:15px 50px;
@@ -50,7 +53,7 @@ JL.webgl.ui.item.main_menu.css = `
 	}
 
 	.ui-main-menu .options .option:hover{
-		background:#fff;
+		background:rgba(181, 38, 38, 0.9);
 	}
 
 	#main-menu-settings{
@@ -59,11 +62,18 @@ JL.webgl.ui.item.main_menu.css = `
 	}
 
 	#main-menu-settings .jl-json-edit td.lbl{
-		background:#34567a;
+		background:#333;
 		width:150px;
 		vertical-align:middle;
 		padding:0 5px;
 		font-size:14px;
+		border:1px solid rgba(255,255,255,0.4);
+	}
+
+	#main-menu-settings .jl-json-edit select,
+	#main-menu-settings .jl-json-edit textarea,
+	#main-menu-settings .jl-json-edit input{
+		background:#34567a;
 	}
 
 	#main-menu-settings .jl-json-edit input{
@@ -71,15 +81,6 @@ JL.webgl.ui.item.main_menu.css = `
 	}
 
 	@media only screen and (max-width : 500px) {
-		.ui-main-menu .title{
-			font-size:20px;
-			
-		}
-
-		.ui-main-menu .title img{
-			height:28px;
-		}
-
 		.ui-main-menu .options .option{
 			width:100vw;
 		}
@@ -89,7 +90,7 @@ JL.webgl.ui.item.main_menu.css = `
 JL.webgl.ui.item.main_menu.ui_framework = function(){
 	return `<div id="main-menu" class="ui-main-menu">
 		<div class="title">
-			<img src="./assets/textures/environments/main/antarctica.png" />
+			<img src="./assets/textures/environments/main/bowling_clipart_01.png" />
 			Bowling
 		</div>
 		<div id="main-menu-settings">

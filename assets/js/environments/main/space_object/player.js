@@ -22,7 +22,7 @@ JL.webgl.space_object.player.prototype._on_instantiate = function( p ){
 	this.turn_bonuses = [];
 
 	this.computer_min_power    = 0.7;
-	this.computer_min_accuracy = 0.6;
+	this.computer_min_accuracy = 0.1;
 
 	p.ui_elements = JL.functions.filter_duplicates( ( p.ui_elements || [] ).concat([ 'scoreboard', ]) );
 
@@ -72,7 +72,7 @@ JL.webgl.space_object.player.prototype.throw_ball = function( p ){
 			obj_params     : { y : 0.5, radius : p.ball_radius || 0.3, parent_object : this, },
 			obj_type       : JL.webgl.space_object.ball,
 			forward_offset : 1,
-			spread_y       : 20,
+			spread_y       : ( this.is_user ? 10 : 20 ),
 			force_x,
 			force_y        :  1000000,
 			force_z        : 10000000 * power,
