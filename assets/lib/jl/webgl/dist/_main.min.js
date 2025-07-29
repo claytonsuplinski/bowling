@@ -4826,7 +4826,10 @@ JL.json_edit.prototype.collapse_section = function( p ){
 JL.json_edit.prototype.get_default_value = function( p ){
 	var default_val = p.default;
 	if( default_val === undefined ){
-		if( p.get_default ) default_val = p.get_default.apply( this.value, [{ structure : p.structure, json_edit : this, }] );
+		if( p.get_default ){
+			default_val = p.get_default.apply( this.value, [{ structure : p.structure, json_edit : this, }] );
+			if( p.type == 'webgl.graphics_object' ) default_val = JL.webgl.ui.item.edit.index_graphics_object( default_val );
+		}
 		else{
 			switch( p.type ){
 				case 'float':
@@ -8563,13 +8566,13 @@ JL.webgl.init = function( cfg ){
 	if( cfg.attr ) JL.functions.recursive_assign( this, cfg.attr );
 
 	[
-		{ key : 'camera'      , obj : this.camera.prototype              , },
-		{ key : 'device'      , obj : this.device                        , },
-		{ key : 'device.vr'   , obj : this.device.options.vr             , },
-		{ key : 'environment' , obj : this.environment.prototype         , },
-		{ key : 'load'        , obj : this.load                          , },
-		{ key : 'main'        , obj : this.main                          , },
-		{ key : 'shader'      , obj : this.shader.prototype              , },
+		{ key : 'camera'      , obj : this.camera.prototype               , },
+		{ key : 'device'      , obj : this.device                         , },
+		{ key : 'device.vr'   , obj : this.device.options.vr              , },
+		{ key : 'environment' , obj : this.environment.prototype          , },
+		{ key : 'load'        , obj : this.load                           , },
+		{ key : 'main'        , obj : this.main                           , },
+		{ key : 'shader'      , obj : this.shader.prototype               , },
 		{ key : 'space_object', obj : this.space_object._regular.prototype, },
 	].forEach(function( field ){
 		if( cfg[ field.key ] ){
@@ -8839,7 +8842,7 @@ JL.webgl.functions.get_full_effects_list = function( effects ){
 JL.webgl.functions.get_instanced_fields = function( effects ){
 	var output = [];
 
-	JL.webgl.functions.get_full_effects_list( effects ).forEach(function( effect_name ){
+	for( var effect_name of JL.webgl.functions.get_full_effects_list( effects ) ){
 		var cfg = JL.webgl.shaders.effects[ effect_name ];
 
 		if( cfg.append ){
@@ -8859,7 +8862,7 @@ JL.webgl.functions.get_instanced_fields = function( effects ){
 				}
 			}
 		}
-	}, this);
+	}
 
 	return output;
 };
@@ -9013,6 +9016,22 @@ JL.webgl.functions.delete_graphics_object = function( path ){
 		if( i < arr.length - 1 ) g_o  = g_o[ key ];
 		else{                    delete g_o[ key ]; }
 	});
+};
+
+JL.webgl.functions.get_derived_graphics_objects_label = function( p ){ // for things like floors/ceilings in building s_o's
+	var output = [ '_environments' ].slice();
+
+	var p = p || {};
+
+	var env = JL.webgl.active_environment;
+	if( p.space_object ){
+		if( p.space_object.environment ) env = p.space_object.environment;
+	}
+	if( env ){
+		if( env.keys ) output = output.concat( env.keys );
+	}
+
+	return output;
 };
 
 JL.webgl.functions.get_graphics_object_id = function( g_o ){
@@ -12404,6 +12423,12 @@ JL.webgl.shaders.effects = {
 			"per_shading_functions"  : [{ "var" : "_pattern_fractal_03" }]
 		}
 	},
+	"_pattern_spiral_01" : {
+		"append" : {
+			"uniforms"  : [{ "shader" : "per_shading", "type" : "float", "var" : "time" },{ "shader" : "per_shading", "type" : "float", "var" : "pattern_spiral_01_size" },],
+			"per_shading_functions"  : [{ "var" : "_hsv_to_rgb" }, { "var" : "_pattern_spiral_01" }]
+		}
+	},
 	"_pattern_squares_01" : {
 		"append" : {
 			"uniforms"  : [{ "shader" : "per_shading", "type" : "float", "var" : "time" }],
@@ -13135,16 +13160,43 @@ JL.webgl.shaders.functions._pattern_hexagons_rainbow = `vec3 _pattern_hexagons_r
 	);
 }`;
 
+JL.webgl.shaders.functions._pattern_spiral_01 = `vec3 _pattern_spiral_01( in vec2 uv, in float time, in float size ){
+	uv *= size;
+
+	float a = atan( uv.y, uv.x );
+	float d = pow( 10.0 * length(uv), 0.7 );
+	float i = d - ( a / 6.28318 + 0.5 );
+	float t = 0.05 * time;
+
+        float a_1 = a + 6.28318 * floor(i);
+
+	vec3 c1 = _hsv_to_rgb( vec3(
+	    pow( 0.5 * ( sin( a_1 * 1.003 * t ) + 1.0 ), 3.0 ) + ( 1.222*t + 0.4 ),
+	    pow( 0.5 * ( sin( a_1 * 1.01  * t ) + 1.0 ), 2.0 ),
+	    pow( 0.5 * ( sin( a_1 *         t ) + 1.0 ), 3.0 )
+	) );
+
+        a_1 = a + 6.28318 * floor(i+1.0);
+
+	vec3 c2 = _hsv_to_rgb( vec3(
+	    pow( 0.5 * ( sin( a_1 * 1.003 * t ) + 1.0 ), 3.0 ) + ( 1.222*t + 0.4 ),
+	    pow( 0.5 * ( sin( a_1 * 1.01  * t ) + 1.0 ), 2.0 ),
+	    pow( 0.5 * ( sin( a_1 *         t ) + 1.0 ), 3.0 )
+	) );
+
+	return mix( c1, c2, fract(i) );
+}`;
+
 JL.webgl.shaders.functions._pattern_squares_01 = `vec3 _pattern_squares_01( in vec2 uv, in float time ){
-    vec2 px = 4.0*( -vec2( 1.0 ) + 2.0 * uv );
-    
-    float id = 0.5 + 0.5 * cos( time + sin( dot( floor( px + 0.5 ), vec2( 113.1, 17.81 ) ) ) * 43758.545 );
-    
-    vec3 co = 0.5 + 0.5 * cos( time + 2.0 * id + vec3( 0.0, 1.0, 2.0 ) );
-    
-    vec2 pa = smoothstep( 0.0, 0.2, id * ( 0.5 + 0.5 * cos( 6.2831 * px ) ) );
-    
-    return co * pa.x * pa.y;
+	vec2 px = 4.0*( -vec2( 1.0 ) + 2.0 * uv );
+
+	float id = 0.5 + 0.5 * cos( time + sin( dot( floor( px + 0.5 ), vec2( 113.1, 17.81 ) ) ) * 43758.545 );
+
+	vec3 co = 0.5 + 0.5 * cos( time + 2.0 * id + vec3( 0.0, 1.0, 2.0 ) );
+
+	vec2 pa = smoothstep( 0.0, 0.2, id * ( 0.5 + 0.5 * cos( 6.2831 * px ) ) );
+
+	return co * pa.x * pa.y;
 }`;
 
 JL.webgl.shaders.functions._pattern_squares_02 = `vec3 _pattern_squares_02( in vec2 uv, in float time ){
@@ -13554,6 +13606,12 @@ JL.webgl.shaders.functions._apply_hue_rotate = `vec3 _apply_hue_rotate( in vec3 
 		( 0.299 - 0.299 * U - 0.328 * W ) * color.r + ( 0.587 + 0.413 * U + 0.035 * W ) * color.g + ( 0.114 - 0.114 * U + 0.292 * W ) * color.b,
 		( 0.299 - 0.300 * U + 1.250 * W ) * color.r + ( 0.587 - 0.588 * U - 1.050 * W ) * color.g + ( 0.114 + 0.886 * U - 0.203 * W ) * color.b
 	);
+}`;
+
+JL.webgl.shaders.functions._hsv_to_rgb = `vec3 _hsv_to_rgb( in vec3 c ){
+	float s = c.y * c.z;
+	float s_n = c.z - s * 0.5;
+	return vec3(s_n) + vec3(s) * cos( 6.28318 * ( c.x + vec3(1.0, 0.6666, .3333) ) );
 }`;
 
 JL.webgl.shaders.functions._texture_size_wrt_camera_distance = `vec4 _texture_size_wrt_camera_distance( in vec2 vt, in sampler2D tex, in float camera_distance, in float a_exp, in float near_dist, in float far_dist, in float near_scale, in float far_scale ){
@@ -14296,6 +14354,7 @@ JL.webgl.shader.prototype.include_shading_calculations = function( shader_source
 	if( this.property_exists( 'effects', '_pattern_fractal_01' ) ) shader_source.push( 'color_main.rgb = _pattern_fractal_01( vt, ' + this.per_shading_type + 's_float_time );' );
 	if( this.property_exists( 'effects', '_pattern_fractal_02' ) ) shader_source.push( 'color_main.rgb = _pattern_fractal_02( vt, ' + this.per_shading_type + 's_float_time );' );
 	if( this.property_exists( 'effects', '_pattern_fractal_03' ) ) shader_source.push( 'color_main.rgb = _pattern_fractal_03( vt, ' + this.per_shading_type + 's_float_time );' );
+	if( this.property_exists( 'effects', '_pattern_spiral_01'  ) ) shader_source.push( 'color_main.rgb = _pattern_spiral_01(  vt, ' + this.per_shading_type + 's_float_time, ' + this.per_shading_type + 's_float_pattern_spiral_01_size );' );
 	if( this.property_exists( 'effects', '_pattern_squares_01' ) ) shader_source.push( 'color_main.rgb = _pattern_squares_01( vt, ' + this.per_shading_type + 's_float_time );' );
 	if( this.property_exists( 'effects', '_pattern_squares_02' ) ) shader_source.push( 'color_main.rgb = _pattern_squares_02( vt, ' + this.per_shading_type + 's_float_time );' );
 	if( this.property_exists( 'effects', '_pattern_squares_03' ) ) shader_source.push( 'color_main.rgb = _pattern_squares_03( vt, ' + this.per_shading_type + 's_float_time );' );
@@ -16144,7 +16203,7 @@ JL.webgl.graphics_object._main.prototype.apply_transforms = function( transforms
 		});
 	}
 
-	transforms.forEach(function( transform ){
+	for( var transform of transforms ){
 		switch( transform.type ){
 			case 'translate':
 				transform.x = ( transform.x != undefined ? transform.x : 0 );
@@ -16160,11 +16219,11 @@ JL.webgl.graphics_object._main.prototype.apply_transforms = function( transforms
 				}
 
 				if( this.vertex_groups ){
-					this.vertex_groups.groups.forEach(function( group ){
+					for( var group of this.vertex_groups.groups ){
 						group.pivot.x += transform.x;
 						group.pivot.y -= transform.z;
 						group.pivot.z += transform.y;
-					});
+					}
 				}
 				break;
 			case 'rotate':
@@ -16209,7 +16268,7 @@ JL.webgl.graphics_object._main.prototype.apply_transforms = function( transforms
 				});
 
 				if( this.vertex_groups ){
-					this.vertex_groups.groups.forEach(function( group ){
+					for( var group of this.vertex_groups.groups ){
 						// Note : the following rotations will not affect the axes of rotation (ex: walking animation)
 						// x =>  x
 						// y => -z
@@ -16234,7 +16293,7 @@ JL.webgl.graphics_object._main.prototype.apply_transforms = function( transforms
 								group.pivot.x = sin * x + cos * y;
 								break;
 						}
-					});
+					}
 				}
 				break;
 			case 'scale':
@@ -16251,15 +16310,15 @@ JL.webgl.graphics_object._main.prototype.apply_transforms = function( transforms
 				}
 
 				if( this.vertex_groups ){
-					this.vertex_groups.groups.forEach(function( group ){
+					for( var group of this.vertex_groups.groups ){
 						group.pivot.x *=  transform.x;
 						group.pivot.y *= -transform.z;
 						group.pivot.z *=  transform.y;
-					});
+					}
 				}
 				break;
 		}
-	}, this);
+	}
 
 	return g_o;
 };
@@ -17029,18 +17088,28 @@ JL.webgl.graphics_object._main.prototype.load_polygon_vertices = function( p ){
 
 	if( !p.flip ) vertex_indices.reverse();
 
-	// TODO : The following doesn't work correctly. Can't go off of normal vectors. Need to go off of clockwise ordering.
-	// 	-Useful for s_o._building floors / ceilings.
 	if( p.face_dir ){
+		var v_i_1 = 3 * vertex_indices[ 0 ];
+		var v_i_2 = 3 * vertex_indices[ 1 ];
+		var v_i_3 = 3 * vertex_indices[ 2 ];
+
+		var norm = JL.functions.calculate_unnormalized_triangle_normal(
+			[ _this.v[ v_i_1 ], _this.v[ v_i_1 + 1 ], _this.v[ v_i_1 + 2 ], ],
+			[ _this.v[ v_i_2 ], _this.v[ v_i_2 + 1 ], _this.v[ v_i_2 + 2 ], ],
+			[ _this.v[ v_i_3 ], _this.v[ v_i_3 + 1 ], _this.v[ v_i_3 + 2 ], ],
+		);
+
 		var fd = p.face_dir;
 		var axis_idx = 0;
 		if     ( fd.axis == 'y' ) axis_idx = 1;
 		else if( fd.axis == 'z' ) axis_idx = 2;
 
-		if     ( !fd.invert && _this.vn[ axis_idx ] < 0 ) vertex_indices.reverse();
-		else if(  fd.invert && _this.vn[ axis_idx ] > 0 ) vertex_indices.reverse();
-		// if     ( !fd.invert && _this.vn[ axis_idx ] < 0 ) _this.vn = _this.vn.map( x => -x );
-		// else if(  fd.invert && _this.vn[ axis_idx ] > 0 ) _this.vn = _this.vn.map( x => -x );
+		if(  // Flip the polygon because it's facing the wrong direction.
+			( !fd.negate && norm[ axis_idx ] > 0 ) ||
+			(  fd.negate && norm[ axis_idx ] < 0 )
+		){
+			vertex_indices.reverse();
+		}
 	}
 
 	_this.vertex_indices.push( ...vertex_indices );
@@ -17179,7 +17248,7 @@ JL.webgl.graphics_object._main.prototype.load_textures = function( textures, cal
 			}
 		}, 30);
 
-		textures.forEach(function( texture ){
+		for( var texture of textures ){
 			var params = texture.params || {};
 
 			var cb = params.callback;
@@ -17189,7 +17258,7 @@ JL.webgl.graphics_object._main.prototype.load_textures = function( textures, cal
 			};
 
 			this.set_texture( texture.filename, params );
-		}, this);
+		}
 	}
 	else{
 		if( callback ) callback( self );
@@ -26593,13 +26662,10 @@ JL.webgl.space_object._wall = JL.functions.inherit_class( function(){}, JL.webgl
 	_inputs : [
 		{ key : 'no_physics', type : 'bool', default : true, },
 		{ key : 'size'      , type : 'float', default : 1, ui_order : '0_vals' },
-		// 2025-06-10
 		{ key : 'graphics_object', type : 'webgl.graphics_object', ui_order : '0_vals_g_o', 
 			get_default : function(){
-				try{ var g_o = JL.webgl.functions.get_graphics_object([ '_default_wall' ]).copy({ unique_label : true }); } catch(e){}
-				try{ return JL.webgl.functions.index_graphics_object( g_o ); } catch(e){ return g_o; }
+				try{ return JL.webgl.functions.get_graphics_object([ '_default_wall' ]).copy({ unique_label : true }); } catch(e){}
 			}, 
-		// { key : 'graphics_object', type : 'webgl.graphics_object', ui_order : '0_vals_g_o', default : '_default_wall', get_options : function(){
 			get_options : function(){
 				return JL.webgl.space_object._building.get_wall_graphics_object_options().filter( m => !m.startsWith( '_in_library/' ) );
 			}
@@ -27127,11 +27193,13 @@ JL.webgl.space_object._building.get_wall_graphics_object_options = function(){
 };
 
 JL.webgl.space_object._building.create_cap_graphics_object = function( p ){
-	var key;
-	var idx = 1;
-	while( JL.webgl.functions.get_graphics_object([ '_building', key = p.type + '_' + idx ]) ) idx++;
+	var base_label = JL.webgl.functions.get_derived_graphics_objects_label().concat([ '_building', ]);
 
-	return JL.webgl.functions.create_graphics_object({ type : 'polygon', label : [ '_building', key ] });
+	var label;
+	var idx = 1;
+	while( JL.webgl.functions.get_graphics_object( label = base_label.concat([ p.type + '_' + idx ]) ) ) idx++;
+
+	return JL.webgl.functions.create_graphics_object({ type : 'polygon', label, });
 };
 
 JL.webgl.space_object._building.prototype.condense_collider_levels = function( sorted_levels ){
@@ -27338,14 +27406,14 @@ JL.webgl.space_object._building.prototype.on_physics_init = function( p ){
 				switch( part_name ){
 					case 'ceiling_down':
 						// 2025-07-24
-						face_dir = { axis : 'y', invert : true };
+						face_dir = { axis : 'y', negate : true };
 						// flip = true;
 					case 'ceiling_up':
 						y_offset = ( level.size || 1 );
 						break;
 					case 'floor_down':
 						// 2025-07-24
-						face_dir = { axis : 'y', invert : true };
+						face_dir = { axis : 'y', negate : true };
 						// flip = true;
 						break;
 				}
@@ -28544,11 +28612,13 @@ JL.webgl.space_object._path = JL.functions.inherit_class( function(){}, JL.webgl
 } );
 
 JL.webgl.space_object._path.create_graphics_object = function(){
-	var key;
-	var idx = 1;
-	while( JL.webgl.functions.get_graphics_object([ '_path', key = idx ]) ) idx++;
+	var base_label = JL.webgl.functions.get_derived_graphics_objects_label().concat([ '_path', ]);
 
-	return JL.webgl.functions.create_graphics_object({ type : 'road', label : [ '_path', key ] });
+	var label;
+	var idx = 1;
+	while( JL.webgl.functions.get_graphics_object( label = base_label.concat([ idx ]) ) ) idx++;
+
+	return JL.webgl.functions.create_graphics_object({ type : 'road', label, });
 };
 
 JL.webgl.space_object._path.prototype.on_physics_init = function( p ){
@@ -30885,8 +30955,8 @@ JL.webgl.ui.item.edit.item_types.space_object.draw = function( self, p ){
 		scroll_top = $( '#current-config-edit-fields' ).scrollTop() || 0;
 	}
 
-	this.item_type  = curr_space_object.type;
-	this.item_index = curr_space_object.index;
+	this.item_type  = ( curr_space_object.type  !== undefined ? curr_space_object.type  : this.item_type  );
+	this.item_index = ( curr_space_object.index !== undefined ? curr_space_object.index : this.item_index );
 	this.current_config = $.extend( true, {}, JL.webgl.active_environment._environment_config.space_objects[ this.item_type ][ this.item_index ] );
 
 	JL.webgl.ui.item.edit.draw_json_edit({
@@ -31533,6 +31603,48 @@ JL.webgl.ui.item.mobile_arrow_keys.ui_framework = function(){
 				'<i class="fa fa-caret-' + dir + '"/>' + 
 			'</div>';
 		}).join('') +
+	'</div>';
+};
+
+JL.webgl.ui.item.mobile_reset_camera = function( p ){
+	this.init( p );
+};
+
+JL.webgl.ui.item.mobile_reset_camera.css = `
+	.jl-webgl-mobile-reset-camera{
+		position:fixed;
+		width :35px;
+		height:35px;
+		top  :10px;
+		right:10px;
+		border-radius:100px;
+		background:rgba(0, 88, 188, 0.4);
+		color:rgba(255,255,255,0.5);
+		border:1px solid rgba(78, 161, 255, 0.3);
+		text-align:center;
+		font-size:22px;
+		margin:auto;
+		padding-top:5px;
+	}
+
+	.jl-webgl-mobile-reset-camera i.fa-refresh{
+		position:absolute;
+		font-size:12px;
+		top:10px;
+		left:9px;
+	}
+
+	@media only screen and (min-width : 801px) {
+		.jl-webgl-mobile-reset-camera{
+			display:none;
+		}
+	}
+`;
+
+JL.webgl.ui.item.mobile_reset_camera.ui_framework = function(){
+	return '<div class="jl-webgl-mobile-reset-camera" onclick="JL.webgl.active_camera.reset_view();">' +
+		'<i class="fa fa-refresh"/>' + 
+		'<i class="fa fa-video-camera"/>' + 
 	'</div>';
 };
 

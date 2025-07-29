@@ -117,8 +117,7 @@ JL.webgl.space_object.bowling_game.prototype._constructor = function( p ){
 	}, JL.webgl.space_object.player );
 	this.players.push( this.user );
 
-	// TODO : test
-	for( var i = 0; i < 1; i++ ){
+	for( var i = 0; i < this.num_cpus; i++ ){
 		this.players.push(
 			this.environment.add_space_object({
 				name          : 'CPU ' + ( i + 1 ),

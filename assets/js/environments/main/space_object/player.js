@@ -22,7 +22,7 @@ JL.webgl.space_object.player.prototype._on_instantiate = function( p ){
 	this.turn_bonuses = [];
 
 	this.computer_min_power    = 0.7;
-	this.computer_min_accuracy = 0.1;
+	this.computer_min_accuracy = this.game.cpu_difficulty;
 
 	p.ui_elements = JL.functions.filter_duplicates( ( p.ui_elements || [] ).concat([ 'scoreboard', ]) );
 
