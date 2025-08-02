@@ -42,7 +42,9 @@ JL.webgl.space_object.player.prototype._on_instantiate = function( p ){
 			// 	-Could be useful for difficulty levels.
 			// speed    : 2,
 			onclick  : 'JL.webgl.ui.item.power_gauge.on_user_input();',
-			callback : function(){ self.throw_ball(); },
+			callback : function(){
+				self.throw_ball({ power : this.power / 100, accuracy : this.accuracy });
+			},
 		};
 	}
 };

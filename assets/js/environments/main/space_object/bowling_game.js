@@ -1,11 +1,13 @@
 JL.webgl.space_object.bowling_game = JL.functions.inherit_class( function(){}, JL.webgl.space_object._regular, {
 	_inputs : [
-		{ key : 'num_pins'   , type :   'int', default : 10    , ui_order : '0_a', max : 500 },
-		{ key : 'pin_spacing', type : 'float', default :  0.8  , ui_order : '0_b' },
-		{ key : 'num_cpus'   , type :   'int', default :  0    , ui_order : '0_c' },
-		{ key : 'ball_radius', type : 'float', default :  0.285, ui_order : '0_d' },
-		// { key : 'num_frames' , type :   'int', default : 1    , ui_order : '0_e', min : 1 },
-		{ key : 'num_frames' , type :   'int', default : 10    , ui_order : '0_e', min : 1 },
+		{ key : 'num_pins'   , type :   'int', default : 10    , ui_row : '0_a', min : 1, max : 500 },
+		{ key : 'pin_spacing', type : 'float', default :  0.8  , ui_row : '0_a' },
+		{ key : 'num_cpus'   , type :   'int', default :  0    , ui_row : '0_b' },
+		{ key : 'ball_radius', type : 'float', default :  0.285, ui_row : '0_b' },
+		{ key : 'num_frames' , type :   'int', default : 10    , ui_row : '0_c', min : 1 },
+		{ key : 'pins_x'     , type : 'float', default :  0    , ui_row : '0_d', no_this_assign : true },
+		{ key : 'pins_y'     , type : 'float', default :  0    , ui_row : '0_d', no_this_assign : true },
+		{ key : 'pins_z'     , type : 'float', default : 20    , ui_row : '0_d', no_this_assign : true },
 	]
 } );
 
@@ -18,17 +20,22 @@ JL.webgl.space_object.bowling_game.prototype._constructor = function( p ){
 
 	this.ui_elements = JL.functions.filter_duplicates( ( this.ui_elements || [] ).concat([ 'scoreboard', 'finish', ]) );
 
+	this.ignore_xyz = true;
+
 	if( !this.ui_info ) this.ui_info = {};
 	this.ui_info._game  = this;
 	this.ui_info.finish = {};
 
-	this.pins_x_offset =  0;
-	this.pins_y_offset =  0;
-	this.pins_z_offset = 20;
+	this.pins_x_offset = p.pins_x;
+	this.pins_y_offset = p.pins_y;
+	this.pins_z_offset = p.pins_z;
+
+	// TODO : Implement ability to rotate bowling game.
+	// 	-Right now [2025-07-31], I think only translating works.
 
 	var min_x =  Infinity;
 	var max_x = -Infinity;
-	var min_z =  0;
+	var min_z =         0;
 	var max_z = -Infinity;
 
 	var z = 0;
@@ -87,11 +94,11 @@ JL.webgl.space_object.bowling_game.prototype._constructor = function( p ){
 
 	this.boundary = this.environment.add_collider({
 		shapes   : [
-			{ type : 'cube', dimensions : { x : 50, y : 50, z :  5 }, position : { x :   0, y : 50, z : boundary_min_z } },
-			{ type : 'cube', dimensions : { x : 50, y : 50, z :  5 }, position : { x :   0, y : 50, z : boundary_max_z } },
+			{ type : 'cube', dimensions : { x : 50, y : 50, z :  5 }, position : { x : this.x, y : 50, z : boundary_min_z } },
+			{ type : 'cube', dimensions : { x : 50, y : 50, z :  5 }, position : { x : this.x, y : 50, z : boundary_max_z } },
 
-			{ type : 'cube', dimensions : { x :  5, y : 50, z : 50 }, position : { x : boundary_min_x, y : 50, z :   0 } },
-			{ type : 'cube', dimensions : { x :  5, y : 50, z : 50 }, position : { x : boundary_max_x, y : 50, z :   0 } },
+			{ type : 'cube', dimensions : { x :  5, y : 50, z : 50 }, position : { x : boundary_min_x, y : 50, z : this.z } },
+			{ type : 'cube', dimensions : { x :  5, y : 50, z : 50 }, position : { x : boundary_max_x, y : 50, z : this.z } },
 		],
 		position : { x : 0, y : 0, z : 0 },
 		collision_filter : 'still',
@@ -101,7 +108,7 @@ JL.webgl.space_object.bowling_game.prototype._constructor = function( p ){
 		shapes   : [
 			{ type : 'cube', dimensions : { x : 50, y : 50, z :  1 }, position : { x :   0, y : 50, z : min_z + 2 } },
 		],
-		position : { x : 0, y : 0, z : 0 },
+		position : { x : this.x, y : 0, z : this.z },
 		collision_filter : 'user_sensor',
 	});
 

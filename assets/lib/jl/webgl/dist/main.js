@@ -22061,6 +22061,9 @@ JL.webgl.space_object._regular.prototype._inputs = [
 
 	{ key : 'per_frame_functions', type : 'arr', no_this_assign : true, optional : true, structure : { type : 'function', no_label : true } },
 
+	{ key : 'on_init'            , type : 'function', no_this_assign : true, optional : true },
+	{ key : 'on_post_init'       , type : 'function', no_this_assign : true, optional : true },
+
 	{ key : 'put_on_terrain', type : 'obj', no_this_assign : true, optional : true,
 		structure : [
 			{ key : 'terrain', type : 'webgl.space_object', optional : true,
@@ -22132,6 +22135,8 @@ JL.webgl.space_object._regular.prototype.init = function( p ){
 
 	JL.webgl.space_object_ids.push( this._id );
 
+	if( p.on_init ) p.on_init.apply( this, p );
+
 	if( this._on_instantiate ) this._on_instantiate( p );
 
 	if( this._constructor ) this._constructor( p );
@@ -22188,7 +22193,8 @@ JL.webgl.space_object._regular.prototype.init = function( p ){
 
 	JL.webgl.all_space_objects.push( this );
 
-	if( this.on_post_init ) this.on_post_init( p );
+	if( this._on_post_init ) this._on_post_init( p );
+	if( p.on_post_init ) p.on_post_init.apply( this, p );
 };
 
 JL.webgl.space_object._regular.prototype.set_graphics_object = function( obj, p ){
@@ -23269,8 +23275,9 @@ JL.webgl.space_object._regular.prototype.construct_draw_update_function = functi
 
 JL.webgl.space_object._physics = JL.functions.inherit_class( function(){}, JL.webgl.space_object._regular, { _inputs : [
 	{ key : 'no_physics'        , type : 'bool', },
-	{ key : 'offset'            , type : 'arr', no_p_assign : true, length : 3, structure : { type : 'float' }, optional : true },
-	{ key : 'collider'          , type : 'obj', no_this_assign : true, optional : true,
+	{ key : 'could_move'        , type : 'bool', },
+	{ key : 'offset'            , type : 'arr', no_p_assign : true, length : 3, structure : { type : 'float' }, optional : 1 },
+	{ key : 'collider'          , type : 'obj', no_this_assign : true, optional : 1,
 		structure : JL.webgl.physics.collider.prototype._inputs.slice(),
 	},
 ] } );
@@ -23296,8 +23303,8 @@ JL.webgl.space_object._physics.prototype._constructor = function( p ){
 	if( is_dynamic ) this._init_for_moving_object();
 
 	if( !this.no_physics ){
-		try     { var is_stationary = ( !p.moving && !p.collider.mass ); }
-		catch(e){ var is_stationary = ( !p.moving ); }
+		try     { var is_stationary = ( !p.could_move && !p.collider.mass ); }
+		catch(e){ var is_stationary = ( !p.could_move ); }
 
 		if( is_stationary ){
 			this.remove_physics_per_frame_update();
@@ -25670,9 +25677,50 @@ JL.webgl.space_object._terrain.prototype.load_tiles = function( tiles, callback 
 			if( self.random_heights ){
 				var pos_factor = 2 * self.tile_mag_inv;
 				cfg.added_heights_function = function( x, z ){
+					// TODO  : test -- uncomment to resume testing lining up terrains with random_heights and tile_mag > 1
+					// 	-The printed coordinates after the '->' should equal each other.
+					// 	-Current output:
+					// 		v [ -1 -1 ]  vt [ 1 1 ] ->  -0.75 -0.75
+					// 		v [ 0 0 ]  vt [ 0 0 ]   ->  0 0
+					// 	-Desired output: (where v_1 and v_2 could be any numbers)
+					// 		v [ -1 -1 ]  vt [ 1 1 ] ->  v_1 v_2
+					// 		v [ 0 0 ]  vt [ 0 0 ]   ->  v_1 v_2
+
+					// 	-This only works with tile_mag == 8.
+					var noise_x = ( ( pos_factor * tile_pos.x ) + ( pos_factor * x ) ) / self.random_heights.scale;
+					var noise_z = ( ( pos_factor * tile_pos.z ) + ( pos_factor * z ) ) / self.random_heights.scale;
+					// 	-This doesn't seem to line up with any tile_mag value.
+					// var noise_x = ( tile_pos.x + ( pos_factor * x ) ) / self.random_heights.scale;
+					// var noise_z = ( tile_pos.z + ( pos_factor * z ) ) / self.random_heights.scale;
+
+					if(
+						self.tile_mag == 4 &&
+						// Note: uncomment the following to print only two corner values that should match.
+						// ( tile_pos.x == -1 && tile_pos.z == -1 && x == 1 && z == 1 ) ||
+						// ( tile_pos.x ==  0 && tile_pos.z ==  0 && x == 0 && z == 0 ) 
+						// Note: uncomment the following to print more corner values.
+						(
+							( x == 1 && z == 1 ) ||
+							( x == 0 && z == 0 ) 
+						)
+					){
+						console.log(
+							's_o.terrain(' + self.tile_mag + '): v [',
+								tile_pos.x,
+								tile_pos.z,
+							'] ',
+							'vt [', x, z, ']', 
+							'pos_fac [', pos_factor, ']', 
+							'scl [', self.random_heights.scale, ']', 
+							'-> ',
+							noise_x,
+							noise_z
+						);
+					}
+
 					return self.random_heights.mag * JL.functions.land_elevation_noise({
-						x        : ( tile_pos.x + ( pos_factor * x ) ) / self.random_heights.scale,
-						z        : ( tile_pos.z + ( pos_factor * z ) ) / self.random_heights.scale,
+						x        : noise_x,
+						z        : noise_z,
 						octaves  : self.random_heights.octaves,
 						exponent : self.random_heights.exponent,
 					});
@@ -25830,8 +25878,6 @@ JL.webgl.space_object._terrain.prototype.load_tiles = function( tiles, callback 
 									try     { var effects = g_o_params.properties.effects || []; }
 									catch(e){ var effects = []; }
 									if( !effects.includes( '_instanced_pos' ) ) effects.push( '_instanced_pos' );
-									// TODO : test
-									// effects.push( '_instanced_size' );
 									JL.functions.recursive_assign( g_o_params, { properties : { effects } });
 									JL.functions.recursive_assign( g_o_params, { attr : { num_instances, density_map_idx } });
 
@@ -26390,7 +26436,7 @@ JL.webgl.space_object._walker.prototype.on_physics_init = function( p ){
 	}
 };
 
-JL.webgl.space_object._walker.prototype.on_post_init = function( p ){
+JL.webgl.space_object._walker.prototype._on_post_init = function( p ){
 	if( !this.no_physics ){
 		this.stop_walking(); // Need this, otherwise the user will slide when starting out on an incline
 

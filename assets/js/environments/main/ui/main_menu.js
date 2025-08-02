@@ -112,12 +112,12 @@ JL.webgl.ui.item.main_menu.ui_onselect = function(){
 				{ name : 'Standard' , value : 'standard' , },
 				{ name : 'Halloween', value : 'halloween', },
 			] },
-			{ key : 'num_pins', label : 'Number of Pins', type : 'int', default : 10, min : 0, max : 1000 },
-			{ key : 'num_cpus', label : 'CPUs'          , type : 'int', default :  1, min : 0, max :   10 },
+			{ key : 'num_pins', label : 'Number of Pins', type : 'int', default : 10, min : 0, max : 500 },
+			{ key : 'num_cpus', label : 'CPUs'          , type : 'int', default :  1, min : 0, max :  10 },
 			{ key : 'cpu_difficulty', label : 'CPU Difficulty', type : 'dropdown', default : 0.1, options : [
 				{ name : 'Easy'  , value : 0.1, },
-				{ name : 'Medium', value : 0.3, },
-				{ name : 'Hard'  , value : 0.5, },
+				{ name : 'Medium', value : 0.4, },
+				{ name : 'Hard'  , value : 0.7, },
 			] },
 		],
 	});
